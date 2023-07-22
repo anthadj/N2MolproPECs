@@ -2,7 +2,6 @@
 #  analyseOutputs.py
 #
 #  Created by Antonis Hadjipittas on 13/07/2023.
-#  Copyright © 2023 AHadjipittas. All rights reserved.
 #
 
 import os
@@ -337,7 +336,7 @@ def createNewFile_I(configColumn,configCorresponsingToColumn,file,inPath):
 
             vars=file[3:-6]#The three varibles used to distinguish inner valence
 
-            sym = data.split('wf,')[3][3]
+            sym = vars.split('_')[1]
     
             data = data.replace("!Input natorb,state=8.1; before orbital, for orbital you want to find","")
             data = data.replace("!Input configuration before ' element","")
@@ -385,8 +384,8 @@ def createNewFile_IC(configColumn,configCorresponsingToColumn,file,inPath):
 
             vars=file.split("-")[0][3:]#The three varibles used to distinguish inner valence
 
-            sym = data.split('wf,')[3][3]
-    
+            sym = vars.split('_')[1]
+   
             data = data.replace("!Input natorb,state=8.1; before orbital, for orbital you want to find","")
             data = data.replace("!Input configuration before ' element","")
             data = data.replace('!moldenname','moldenname')

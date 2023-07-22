@@ -2,7 +2,6 @@
 #  main.py
 #
 #  Created by Antonis Hadjipittas on 13/07/2023.
-#  Copyright © 2023 AHadjipittas. All rights reserved.
 #
 
 import sys
@@ -17,22 +16,24 @@ import analyseOutputs as analyse            #after we run outputs, we use method
 
 #------Running the main algorithm------
 def main():
-    inputsPath='../inputs/'
-    outputsPath='../outputs/'
+    inputsFileName='inputsTest'
+    outputsFileName='outputsTest'
+    inputsPath='../'+inputsFileName+'/'
+    outputsPath='../'+outputsFileName+'/'
 
     files=os.listdir('..')
 
     firstRun=False
     for file in files:
-        if file == 'inputs':
+        if file == inputsFileName:
             firstRun=True
         
     #First time the code runs, it creates the necessary folder
     #structure and creates all input files
     if firstRun==False:
         print ("Running first time, creating file structure and generating input files")
-        folders.createFolderStructure()
-        makeM.createMolproInputs('../inputs')
+        folders.createFolderStructure(inputsPath,outputsPath)
+        makeM.createMolproInputs(inputsPath)
         
     #If the code already ran once, the user must run all input files into the directory 'outputs' with the ending .out
     else:
@@ -56,7 +57,7 @@ def main():
             #their respective folder i.e. potential curve data are moved to
             #'outputs/potentialSurfaces' and xml files are moved to 'outputs/folder_xml'
             # This is done to clear up the files in the folder
-            folders.moveOutputFilesToFolders()
+            folders.moveOutputFilesToFolders(outputsPath)
 
             print ("Moved files to folders in outputs folder")
         
@@ -83,7 +84,7 @@ def main():
         if step==3:
             print ("Step 3")
             print ("Moving files in outputs folder to their respective directory")
-            folders.moveOutputFilesToFolders()
+            folders.moveOutputFilesToFolders(outputsPath)
 
 if __name__ == "__main__":
     print ("Running code")

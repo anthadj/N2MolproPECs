@@ -2,15 +2,14 @@
 #  createFolderStructure.py
 #
 #  Created by Antonis Hadjipittas on 13/07/2023.
-#  Copyright © 2023 AHadjipittas. All rights reserved.
 #
 
 import sys
 import os
 import shutil
 
-inputs='../inputs'
-outputs='../outputs'
+#inputs='../inputs'
+#outputs='../outputs'
 molden = 'molden'
 potSur = 'potentialSurfaces'
 xml = 'folder_xml'
@@ -18,22 +17,22 @@ xml = 'folder_xml'
 #--------------------------------------------
 #-----Create Folder Structure in 1st run-----
 #--------------------------------------------
-def createFolderStructure():
+def createFolderStructure(inputs,outputs):
 
     try:
         os.mkdir(inputs)
         os.mkdir(outputs)
         
-        os.mkdir(outputs+"/"+xml)
-        os.mkdir(outputs+"/"+potSur)
-        os.mkdir(outputs+"/"+molden)
+        os.mkdir(outputs+xml)
+        os.mkdir(outputs+potSur)
+        os.mkdir(outputs+molden)
         
     except OSError:
         pass
     else:
         print ("folders successfully created")
 
-    pathMolden = outputs+"/"+molden+"/"
+    pathMolden = outputs+molden+"/"
 
     for i in range(0,3):
         for j in range(0,3):
@@ -61,14 +60,14 @@ def createFolderStructure():
 #----------------------------------------------
 #------Move Outputs Files To Right Folder------
 #----------------------------------------------
-def moveOutputFilesToFolders():
-    path= "../outputs"
+def moveOutputFilesToFolders(path):
+    #path= "../outputs"
     allfiles= os.listdir(path)
     for file in allfiles:
         #if (file.endswith(".molden")):
         if (file.endswith(".molden")) and len(file.split("_"))<6:
             config=file.split('_')[2][:-7]
-            destination=path+"/"+molden+"/"+config
+            destination=path+molden+"/"+config
             shutil.move(os.path.join(path, file), os.path.join(destination,file)) #By writing full path for both source and target
                                               #means that shutil.move() overwrites the file if it
                                                   #alredy exists
@@ -77,7 +76,7 @@ def moveOutputFilesToFolders():
 
         elif (file.endswith(".molden")) and len(file.split("_"))==6:
             config=file.split('_')[-1][:7]
-            destination=path+"/"+molden+"/"+config
+            destination=path+molden+"/"+config
             shutil.move(os.path.join(path, file), os.path.join(destination,file)) #By writing full path for both source and target
                                                                                   #means that shutil.move() overwrites the file if it
                                                                                           #alredy exists
@@ -92,7 +91,7 @@ def moveOutputFilesToFolders():
 #            print ("Moved ", file, " to ", destination)
 
         elif (file.endswith(".dat")):
-            destination=path+"/"+potSur
+            destination=path+potSur
             #shutil.move(file, destination)
             shutil.move(os.path.join(path, file), os.path.join(destination,file)) #By writing full path for both source and target
                                                                                   #means that shutil.move() overwrites the file if it
@@ -100,7 +99,7 @@ def moveOutputFilesToFolders():
             print ("Moved ", file, " to ", destination)
 
         elif (file.endswith(".xml")):
-            destination=path+"/"+xml
+            destination=path+xml
             shutil.move(os.path.join(path, file), os.path.join(destination,file))
             
             print ("Moved ", file, " to ", destination)

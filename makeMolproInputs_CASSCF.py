@@ -2,7 +2,6 @@
 #  makeMolproInputs_CASSCF.py
 #
 #  Created by Antonis Hadjipittas on 13/07/2023.
-#  Copyright © 2023 AHadjipittas. All rights reserved.
 #
 
 import sys
@@ -136,12 +135,12 @@ def removeDuplicateSym(symList):
                 break
     return symList
                 
-# Number of open Shells in the spin
-#If 2 electrons missing = triplet state
-#If 3 electrons missing = quartet state etc.
-#Code by default removes elecetrons with the same spin
-#To calculate for example sinlget state for 2 electrons missing
-#this function needs to be altered
+#Number of open orbitals = Spin
+#If 2 electrons missing from different orbitals = triplet state
+#If 3 electrons missing from different orbitals = quartet state etc.
+#Code by default removes elecetrons from different orbitals with the same spin
+#To calculate for example the case where two electrons missing from different 
+#orbitals have opposite spin this function needs to be altered.
 def getSpin(openList):
     spin=0
     for i in openList:
@@ -210,16 +209,14 @@ def getRestrict(config):
  
     return restrict
     
-#If inner valence is missing return 2 states else return 3 states
-#Upon testing the 3 states lead to discontinuities for configs with inner valence.
-#Using 2 states instead makes the discontinuities in the PECs dissapear.       
 def getWFIC(config):
     if config[2]!='2':
-        #return "wf,14,1,0;wf,14,5,0;orbital,2140.2}"
-        return "wf,14,1,0;orbital,2140.2}"
+	return "wf,14,1,0;wf,14,5,0;orbital,2140.2}"
+        #return "wf,14,1,0;orbital,2140.2}"
     else:
         return "wf,14,1,0;orbital,2140.2}"
 
+#Returns wavefunctions to average over for N2 neutral
 def getWFC(config):
     if config[2]!='2':
         return "wf,14,1,0;wf,14,5,0;orbital,2140.2}"
@@ -265,6 +262,26 @@ def checkCoreANdInnerCoreSize(core,innerCore,bothAfter,bothBefore):
     else:
         return False
 
+#This function should be used as a way to check your work. All inputs using TS-CASSCF are state averaged and printed
+#This way you can compare the state averaged state with non-state averaged state for testing purposes
+#After the file is created, it is not picked up by the second step of the code for analysis. It also has no way
+#of outputing the wavefunctions in molden file since it is not analysed in the second step. 
+#It will output the state averaged data in a file that ends with StateAv.dat
+def createStateAvforCfile(title,fileContents,path):
+    title = title.replace('_C.in','_StateAv.in')
+
+    fileContents = fileContents.replace('***,','***,StateAveragedRunFor-')
+    fileContents = fileContents.replace('accuracy,','state,10;accuracy,')
+    fileContents = fileContents.replace('cas(i)=energy','cas1(i)=energy(1),cas2(i)=energy(2),cas3(i)=energy(3),cas4(i)=energy(4),cas5(i)=energy(5),cas6(i)=energy(6),cas7(i)=energy(7),cas8(i)=energy(8),cas9(i)=energy(9),cas10(i)=energy(10);')
+    fileContents = fileContents.replace('cas;','cas1,cas2,cas3,cas4,cas5,cas6,cas7,cas8,cas9,cas10;') 
+    fileContents = fileContents.replace('moldenname=','!moldenname=')
+    fileContents = fileContents.replace('put,molden,','!put,molden,')
+    fileContents = fileContents.replace('.dat}','stateAv.dat}') 
+   
+    inputFile = open(path+'/'+title, 'w+')
+    inputFile.write(fileContents)
+    inputFile.close()
+ 
 def outputInnerData(path,allInnerAndOuter):
     inputFile = open(path+'/ConfigData', 'w+')
     for i in range(0,len(allInnerAndOuter)):
@@ -298,7 +315,7 @@ def outputNumberOfInputFiles(path,step):
     if step==1:
         fileName.write("Number of input files after 1st run: "+str(inFiles))
     elif step==2:
-        fileName.write("Number of input files after 2nd run:"+str(inFiles))
+        fileName.write("\nNumber of input files after 2nd run: "+str(inFiles))
     fileName.close()
 
 def MolproCASSCFInputPrint(inputconfig,core,coreInner,inner,outer,path):
@@ -355,7 +372,8 @@ def MolproCASSCFInputPrint(inputconfig,core,coreInner,inner,outer,path):
 
     wavefunction= "wf,14,1,0;orbital,2140.2}"
     wavefunctionFreeze=getWFC(config)
-    wavefunctionInnerCore=getWFIC(config)
+    wavefunctionInnerCore=getWFC(config)
+    #wavefunctionInnerCore=getWFIC(config)
 
     #Different methods to call in order to get different basis sets
     #basisSet=getBasisSetAccurate(config)
@@ -370,7 +388,7 @@ angstrom,
 basis = '''+basisSet+''';
 geometry={N;N1,N,r(i)}
 
-len=[0.70,0.80,0.90,0.95,1.00,1.05,1.07,1.09,1.10378,1.11,1.13,1.15,1.20,1.25,1.30,1.35,1.40,1.50,1.60,1.80,2.00,2.25,2.50,2.75,3.00,3.50,4.00]
+len=[0.70,0.80,0.90,1.00,1.05,1.07,1.09,1.10378,1.11,1.13,1.15,1.20,1.25,1.30,1.35,1.40,1.50,1.60,1.80,2.00,2.25,2.50,2.75,3.00,3.50,4.00]
 
 i=0
 do ir=1,#len
@@ -500,6 +518,11 @@ save,N2_'''+str(entry[0])+'_'+str(entry[1])+'_'+str(entry[2])+restrictStringMold
         inputFile.close()
         print ("Printing Core", title)
 
+        #This function creates the state averaged input for the above configuraiton
+        #It only outputs the PECs of 10 states and can't be used to generate molden
+        #wavefunctions. Uncomment it to use it
+        #createStateAvforCfile(title,fileContents,path)
+
     #Outer valence
     if outerBool:
         fileContents = header + intro + wavefunction + outerValecne_Info
@@ -533,7 +556,7 @@ save,N2_'''+str(entry[0])+'_'+str(entry[1])+'_'+str(entry[2])+restrictStringMold
         inputFile = open(path+'/'+title, 'w+')
         inputFile.write(fileContents)
         inputFile.close()
-        print ("Printing Inner ", title)
+        print ("Printing Inner-Core ", title)
     
     print ("")
 	
@@ -742,6 +765,7 @@ def findAllStates(configs,path):
 
 
 def createMolproInputs(path):
+    path=path[:-1]
     #Generate and store all possible electron configurations up to charge 4+
     allConfigs=list()
     for i1 in range(0,3):
