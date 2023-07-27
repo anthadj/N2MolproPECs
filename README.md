@@ -12,6 +12,7 @@ Using three pre-existing techniques along with a fourth one, we generate the pot
 Once the above dependencies have been installed proceed to the execution
 
 # How to execute 
+Download whole "src" directory. Then follow steps below.
 - python main.py   (Code step 1, run from "src" directory: Creates file structure + initial inputs)
 - molpro < N2_\*.in > ../outputs/N2_\*.out   (Run all input files from "inputs" directory. Output results into outputs folder)
 - python main.py   (Code step 2, run from "src" directory: Checks all inputs ran successfully. Cleans outputs directory. Analyses SA-CASSCF and SA-TS-CASSCF. Produce new specific SA-CASSCF and SA-TS-CASSCF input files that produce wavefunctions)
@@ -20,9 +21,9 @@ Once the above dependencies have been installed proceed to the execution
 - python main.py   (Code step 3, run from "src" directory: Check all inputs from above two lines ran successfully. Clean outputs directory)
 
 # Help and Collaborations 
-For any help or for possible collaborations (adjusting for different molecule or other similar issues) please email:
+For any help and/or collaborations (adjusting for different molecule or other similar issues) please email:
 antonis.hadjipittas@gmail.com
 
 # License 
-
+Apache License 2.0
 
