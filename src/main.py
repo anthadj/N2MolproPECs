@@ -1,7 +1,7 @@
 #
 #  main.py
 #
-#  Created by Antonis Hadjipittas on 13/07/2023.
+#  Copyright 2023 Antonis Hadjipittas
 #
 
 import sys
