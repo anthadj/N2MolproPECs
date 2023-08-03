@@ -3,7 +3,7 @@ A python script that automatically creates the Molpro input files necessary to g
 of N2 ions with up to four electrons missing
 
 # Description 
-Using three pre-existing techniques along with a fourth one, we generate the potential energy curves (PECs) of nitrogen molecule ions with up to four electrons missing. The code produces the inputs files necessary to generate the PECs using the quantum chemistry package Molpro. The code can also be adjusted to produce PECs for nitrogen molecules with more electrons, as well as generate the PECs for different molecules.
+Using three pre-existing techniques along with a fourth one, we generate the potential energy curves (PECs) of nitrogen molecule ions with up to four electrons missing. The code produces the inputs files necessary to generate the PECs using the quantum chemistry package Molpro. The code can also be adjusted to produce PECs for nitrogen molecules with more electrons missing, as well as generate the PECs for different molecules.
 
 # Dependencies 
 - Python3.9        (Needed to run code)
