@@ -8,17 +8,17 @@ import os
 
 def testNumberOfInputs(inputsPath):
     with open(inputsPath+'InputFilesCreated', 'r') as inNumFiles:
-	lines = inNumFiles.readlines()
-	numOfFiles = int(lines[-1].split(':')[-1])
+        lines = inNumFiles.readlines()
+        numOfFiles = int(lines[-1].split(':')[-1])
 
     inFiles=0
     dataFiles=0
     allInFiles = os.listdir(inputsPath)
     for file in allInFiles:
-	if file.endswith(".in"):
+        if file.endswith(".in"):
             inFiles+=1
- 	elif file.endswith("Data"):
- 	    dataFiles+=1
+        elif file.endswith("Data"):
+            dataFiles+=1
  
     if inFiles==numOfFiles and len(lines)==1:
         print ("There are ", numOfFiles, " input files. The code proceeds to step 2")
@@ -33,8 +33,8 @@ def testNumberOfInputs(inputsPath):
         return True,3
 
     else:
-        print ("Something is wrong with the number of input files. Check again, there should be 239 .in files in total after first run, and 351 .in files after the second run.")
-        print ("Instead there are: ", len(allInFiles), " files")
+        print ("Something is wrong with the number of input files.")
+        print ("There are: ", len(allInFiles), " files. Is that correct?")
         return False,0
 
 #Check there are equal number of inputs and outputs

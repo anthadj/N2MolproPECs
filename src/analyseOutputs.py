@@ -426,6 +426,7 @@ def analyseOutputs_CreateNewInputs_I(outputsPath,inputsPath):
         recording=False
         dataIndices=list()
         configColumn=list()
+        maxNumList=list()
         configCorresponsingToColumn=list()
     
         #Find the files we are looking for, that end with _I.out
@@ -539,10 +540,11 @@ def analyseOutputs_CreateNewInputs_I(outputsPath,inputsPath):
                                 #Degenerate configurations are found to have the same index.
                                 #Therefore, if this occurs we reassign the index value of
                                 #the second largest coefficient to be the column of data we want
-                                if maxNumIndex in configColumn:
+                                if maxNum in maxNumList:
                                     #Take second largest coefficient. This is for degenerate cofnigurations
                                     maxNumIndex=findSecondMaxCoeffIndex(line,maxNum)
-                                
+
+                                maxNumList.append(maxNum)
                                 configColumn.append(maxNumIndex)
                                 configCorresponsingToColumn.append(con)
 
@@ -622,16 +624,17 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
         multiCounter=0
         dataIndices=list()
         configColumn=list()
+        maxNumList=list()
         configCorresponsingToColumn=list()
-    
+ 
         #Find the files we are looking for, that end with I.out
         if file.endswith("IC.out") and len(file.split("_")) < 5:
 
             print (file)
         
-            #Find the variables that distinguish each set of configurations
+            #Get the three molpro variables for the file (nelec,sym,spin) from file title i.e. 13,1,1
+            #Also get orbitals restricted
             varsFile=file.split('-')[0][3:]
-            
             restrictFile=file.split("-")[1:-1]
    
         else: continue
@@ -655,8 +658,7 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
         equilDistUsed = findEquilDist(lines)
         numOfDistances, equilIndex = findNumOfDistances_findEquilibriumDistIndex(lines, equilDistUsed)
 
-        #Make sure the dataIndices have the correct size.
-        #In default case it is fixed to 58.
+        #Test that all dataIndices have been recorded by checking they have the correct size.
         if len(dataIndices) != numOfDistances*2 :
             print ("Data Indices not the right size, exiting ", len(dataIndices))
             exit(0)
@@ -692,7 +694,7 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
         
         #It is also the case, that orbitals with one electron, might be shown with
         #one of the following four characters: a, b, \, /. We don't always know which
-        #We therefore migh be looking for 2aa 2 a  220 0 0, or 2/\ 2 /  220 0 0 etc.
+        #We therefore migh be looking for configuration 2aa 2 a  220 0 0, or 2/\ 2 /  220 0 0 etc.
         
         #We need to transform each configuration from 2222222 to 222 2 2  220 0 0
         #We need to take into account the different possibilities for open orbitals
@@ -717,6 +719,7 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
             
                     count=0
                     conFound=False
+
                     #Look for config in equilibrium nuclear position of .out file.
                     #If you find it exit while loop, if you don't find it, randomly change
                     #the "a" characters to another character b, / or \. Repeat 1000 times,
@@ -734,16 +737,18 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
                                 maxNumIndex,maxNum=findMaxCoeffIndex(line) #Find index of the biggest coefficient
 
                                 #Degenerate configurations are found to have the same index.
-                                #Therefore, if this occurs we reassign the index value we therefore asign
+                                #Therefore, if this occurs we reassign the index value of
                                 #the second largest coefficient to be the column of data we want
-                                if maxNumIndex in configColumn:
+                                if maxNum in maxNumList:
                                     #Take second largest coefficient. This is for degenerate cofnigurations
                                     maxNumIndex=findSecondMaxCoeffIndex(line,maxNum)
-                                
+                               
+                                maxNumList.append(maxNum) 
                                 configColumn.append(maxNumIndex)
                                 configCorresponsingToColumn.append(con)
 
-                                #Once found, check that this configuration appears in all 29 distances
+                                #Method NOT USED CURRENTLY
+                                #Once found, check that this configuration appears in all distances used
                                 #checkConfigAppearsForAllDistances(dataIndices,lines,"coreinner")
                                
                         #If config is not found, randomly change the a's and b's around. Then the while loop will rerun
@@ -751,9 +756,9 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
                         #This is needed because sometimes Molpro writes orbitals with 1 electron with either a, b, \, or /
                         #but we don't know which one
                         if conFound ==False:
-                            #print ("Config was not found, changing it randomly from ", conStr)
+                            print ("Config was not found, changing it randomly from ", conStr)
                             conStr = randomlyChangeConfigurationString(conStr)
-                            #print ("To: ", conStr)
+                            print ("To: ", conStr)
                                 
                         #If we try 1000 random variations and none of them work, there must be an error. Exit code
                         if count==1000:
@@ -762,7 +767,7 @@ def analyseOutputs_CreateNewInputs_IC(outputsPath,inputsPath):
                             print ("Last string used: ", conStr)
                             print ("Looking in file: ", file)
                             repeatAndIncreaseStates.append(file)
-                            exit(0)
+                            break
                                 
                         count+=1
 

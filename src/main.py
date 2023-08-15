@@ -7,7 +7,7 @@
 import sys
 import os
 
-import testConfigsRun as test		    #methods used for testing
+import testConfigsRun as test               #methods used for testing
 import createFolderStructure as folders     #methods to create folder structure and
                                             #tidy up outpus after run
 import makeMolproInputs_CASSCF as makeM     #methods to create initial molpro input files
@@ -16,8 +16,8 @@ import analyseOutputs as analyse            #after we run outputs, we use method
 
 #------Running the main algorithm------
 def main():
-    inputsFileName='inputsTest'
-    outputsFileName='outputsTest'
+    inputsFileName='inputs'
+    outputsFileName='outputs'
     inputsPath='../'+inputsFileName+'/'
     outputsPath='../'+outputsFileName+'/'
 

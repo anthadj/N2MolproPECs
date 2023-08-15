@@ -84,27 +84,34 @@ def getSymmetry(config):
         
     return symmetry
 
-#Check that configs in core do not appear in innercore, excluding last position of innercore
-#Configs at last position of inner core are also found in core
-def checkCoreAndInnerCoreManually(core,innercore):
+def checkCoreAndInnerCoreManually(core,innercore,extraCoreBool):
     allGoodBool=True
     for l in range(0,len(core)):
         for k in range(1,len(core[l])):
             for m in range(0,len(innercore)):
-                if core[l][k] in innercore[m][2:-2]:
-                    allGoodBool=False
-                    return allGoodBool
+                if extraCoreBool == False:
+                    if core[l][k] in innercore[m][2:]:
+                        allGoodBool=False
+                        return allGoodBool
+                if extraCoreBool == True:
+                    if core[l][k] in innercore[m][2:-1]:
+                        allGoodBool=False
+                        return allGoodBool
     return allGoodBool
 
-def removeDuplicateConfig(core,innercore):
+def removeDuplicateConfig(core,innercore,extraCoreCheck):
     for l in range(len(core)-1,-1,-1):
         for k in range(len(core[l])-1,0,-1):
             for m in range(0,len(innercore)):
                 for n in range(2,len(innercore[m])):
-                    if core[l][k] == innercore[m][n] and n!=len(innercore[m])-1:
-                        core[l].pop(k)
-                        return removeDuplicateConfig(core,innercore)
-   
+                    if extraCoreCheck==True:
+                        if core[l][k] == innercore[m][n] and n!=len(innercore[m])-1: 
+                            core[l].pop(k)
+                            return removeDuplicateConfig(core,innercore,extraCoreCheck)
+                    elif extraCoreCheck==False:
+                        if core[l][k] == innercore[m][n]: 
+                            core[l].pop(k)
+                            return removeDuplicateConfig(core,innercore,extraCoreCheck)  
     return core,innercore
 
 def removeEntriesWithNoConfig(myList):
@@ -134,7 +141,22 @@ def removeDuplicateSym(symList):
                     removeDuplicateSym(symList)
                 break
     return symList
-                
+               
+
+def manualAdjustments(var,text):
+
+    #13_1_1_I.in file: Config 2212222 is the 11th root, so we add one more state     
+    if var[0]==13 and var[1]==1 and var[2]==1:
+        text = text.replace('state,10','state,11')
+        text = text.replace('cas10(i)=energy(10);','cas10(i)=energy(10),cas11(i)=energy(11);')
+        text = text.replace('cas10;','cas10,cas11;')
+
+    #Change distances for config 1211221
+    if var[0]==10 and var[1]==5 and var[2]==4:
+        text = text.replace('1.13,1.17,1.20,1.25,1.30,1.35,1.40,1.60','1.13,1.15,1.20,1.25,1.30,1.35,1.40,1.50,1.60')
+
+    return text
+
 #Number of open orbitals = Spin
 #If 2 electrons missing from different orbitals = triplet state
 #If 3 electrons missing from different orbitals = quartet state etc.
@@ -211,7 +233,7 @@ def getRestrict(config):
     
 def getWFIC(config):
     if config[2]!='2':
-	return "wf,14,1,0;wf,14,5,0;orbital,2140.2}"
+        return "wf,14,1,0;wf,14,5,0;orbital,2140.2}"
         #return "wf,14,1,0;orbital,2140.2}"
     else:
         return "wf,14,1,0;orbital,2140.2}"
@@ -256,11 +278,23 @@ def getBasisSetAccurate(config):
                 return "aug-cc-pCVQZ"
         return "aug-cc-pVQZ"
 
-def checkCoreANdInnerCoreSize(core,innerCore,bothAfter,bothBefore):
-    if core+innerCore == bothBefore+bothAfter:
-        return True
+def checkCoreANdInnerCoreSize(core,innerCore,bothAfter,bothBefore,extraCoreBool):
+    #TODO Check these work correctly 
+    if extraCoreBool == True:
+        if core+innerCore == bothBefore+bothAfter:
+            return True
+        else:
+            return False
+
+    elif extraCoreBool == False:
+        if core+innerCore == bothBefore: 
+            return True
+        else:
+            return False
+    
     else:
-        return False
+        print ("Error in checking core and inner core, exiting")
+        exit(0)
 
 #This function should be used as a way to check your work. All inputs using TS-CASSCF are state averaged and printed
 #This way you can compare the state averaged state with non-state averaged state for testing purposes
@@ -281,7 +315,7 @@ def createStateAvforCfile(title,fileContents,path):
     inputFile = open(path+'/'+title, 'w+')
     inputFile.write(fileContents)
     inputFile.close()
- 
+
 def outputInnerData(path,allInnerAndOuter):
     inputFile = open(path+'/ConfigData', 'w+')
     for i in range(0,len(allInnerAndOuter)):
@@ -388,7 +422,7 @@ angstrom,
 basis = '''+basisSet+''';
 geometry={N;N1,N,r(i)}
 
-len=[0.70,0.80,0.90,1.00,1.05,1.07,1.09,1.10378,1.11,1.13,1.15,1.20,1.25,1.30,1.35,1.40,1.50,1.60,1.80,2.00,2.25,2.50,2.75,3.00,3.50,4.00]
+len=[0.70,0.80,0.90,1.00,1.05,1.07,1.09,1.10378,1.11,1.13,1.17,1.20,1.25,1.30,1.35,1.40,1.60,1.80,2.00,2.25,2.50,2.75,3.00,3.50,4.00]
 
 i=0
 do ir=1,#len
@@ -507,9 +541,13 @@ save,N2_'''+str(entry[0])+'_'+str(entry[1])+'_'+str(entry[2])+restrictStringMold
 
 ---
 '''
-
+    
     #Core and Inner valence
-    if coreBool: #(config[0]!='2' or config[1]!='2' or config[2]!='2'):
+    if coreBool: 
+
+        if inputconfig[:] == [1, 2, 1, 1, 2, 2, 1]:
+            intro = manualAdjustments(entry,intro)           
+ 
         fileContents = header + intro + wavefunctionFreeze + core_Info
 
         title='_'.join(['N2',str(config),'C'])+'.in'
@@ -520,7 +558,7 @@ save,N2_'''+str(entry[0])+'_'+str(entry[1])+'_'+str(entry[2])+restrictStringMold
 
         #This function creates the state averaged input for the above configuraiton
         #It only outputs the PECs of 10 states and can't be used to generate molden
-        #wavefunctions. Uncomment it to use it
+        #wavefunctions. Uncomment it to use it. Ideally used for testing purposes
         #createStateAvforCfile(title,fileContents,path)
 
     #Outer valence
@@ -534,14 +572,9 @@ save,N2_'''+str(entry[0])+'_'+str(entry[1])+'_'+str(entry[2])+restrictStringMold
         print ("Printing Outer", title)
 
     if innerBool:
-	#It was seen that for 13_1_1, config 2212222 is at the 11th place, so we add one more state for this case	
-        #print (entry[0], " ", entry[1], " ", entry[2])
-        if entry[0] == 13 and entry[1] == 1 and entry[2] == 1:
-            innerValence_Info = innerValence_Info.replace('state,10','state,11')
-            innerValence_Info = innerValence_Info.replace('cas10(i)=energy(10);','cas10(i)=energy(10),cas11(i)=energy(11);')
-            innerValence_Info = innerValence_Info.replace('cas10;','cas10,cas11;')
+        new_innerValence_Info = manualAdjustments(entry,innerValence_Info)
 
-        fileContents = headerInner + intro + wavefunction + innerValence_Info
+        fileContents = headerInner + intro + wavefunction + new_innerValence_Info
 
         title='_'.join(['N2',str(entry[0]),str(entry[1]),str(entry[2])])+'_I.in'
         inputFile = open(path+'/'+title, 'w+')
@@ -575,7 +608,7 @@ def findAllStates(configs,path):
         Freeze1,Freeze2 = getFreeze(inputconfig)
         Restrict = getRestrict(inputconfig)
         
-        print (inputconfig, nElec, Open, Spin, Symmetry, variables, Freeze1, Freeze2, Restrict)
+        #print (inputconfig, nElec, Open, Spin, Symmetry, variables, Freeze1, Freeze2, Restrict)
 
         #Create allInfo. A list of configs separated according to the three primary variables that 
         #Molpro needs nElec, spin, symetry, to find the right configuration. 
@@ -725,28 +758,23 @@ def findAllStates(configs,path):
 
     configsCoreOrInnerCore = sum(len(i) for i in allCore) - len(allCore) #Configs in allCore (core + inner-core)
 
+    createExtraCoreBool=False
     #allCore contains configs that use either core (TS-CASSCF) or inner core (SA-TS-CASSCF) technique.
     #allCoreInner only contains configs that use the inner-core (SA-TS-CASSCF) technique.
     #We compare the two and remove from allCore, the configs that appear in allInnerCore
-    #with the exclusion of the lowest energy ones that are left in both.
-    #i.e. allInnerCore = [[[10, 1, 0], ['0,0,1.1'], [0, 2, 2, 0, 2, 2, 2], [0, 2, 2, 2, 0, 2, 2], [0, 2, 2, 2, 2, 0, 2], [0, 2, 2, 2, 2, 2, 0]],...]
-    #The configs [0, 2, 2, 0, 2, 2, 2], [0, 2, 2, 2, 0, 2, 2] and [0, 2, 2, 2, 2, 0, 2] will be removed from allCore, but 
-    #the config [0, 2, 2, 2, 2, 2, 0] will not. Essentially this config can be produced using both core and inner-core and so we leave them in both
-    allCore,allInnerCore=removeDuplicateConfig(allCore,allInnerCore)
+    allCore,allInnerCore=removeDuplicateConfig(allCore,allInnerCore,createExtraCoreBool)
 
     configsCore = sum(len(i) for i in allCore) - len(allCore) #Configs in allCore after adjustment (core only)
     configsInnerCore = sum(len(i) for i in allInnerCore) - 2*len(allInnerCore) #Configs in allInnerCore after adjustment (inner-core only)
     configsInBoth = len(allInnerCore)
 
     #Test if the separation of core and inner-core was done correctly
-    if checkCoreANdInnerCoreSize(configsCore,configsInnerCore,configsInBoth,configsCoreOrInnerCore) == False:
+    if checkCoreANdInnerCoreSize(configsCore,configsInnerCore,configsInBoth,configsCoreOrInnerCore,createExtraCoreBool) == False:
         print ('Error in separating core and inner core. Exiting.')
         exit(0)
 
     #Another check to make sure separation of configs was successful  
-    if(checkCoreAndInnerCoreManually(allCore,allInnerCore) == True):
-        print ("Successful separation")
-    else:
+    if(checkCoreAndInnerCoreManually(allCore,allInnerCore,createExtraCoreBool) == False):
         print ("Error in the configurations of allCore and allInnerCore. Exiting")
         exit(0)
 
@@ -779,7 +807,7 @@ def createMolproInputs(path):
                                     config = [i1,i2,i3,i4,i5,i6,i7]
                                     allConfigs.append(config)
 
-    print ("Separating the configs according to what technique (out of 4) each state needs to use (Read report/paper)")
+    print ("Separating the configs according to what technique (out of 4) to be used.")
     print (len(allConfigs))
     #outer = CASSCF, inner = SA-CASSCF, core = TS-CASSCF, coreInner = SA-TS-CASSCF
     core,coreInner,inner,outer=findAllStates(allConfigs,path)
